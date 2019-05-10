@@ -5,3 +5,7 @@ AllCops:
 
 LineLength:
   Max: 120
+Style/BlockComments:
+  Enabled: false
+Layout/LeadingCommentSpace:
+  Enabled: false
