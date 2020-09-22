@@ -31,6 +31,8 @@ Xcode Command Line Tools should already be installed either by `brew` or through
 
 This does not yet support Xcode packaged with XIP. It is recommended to download and convert to DMG.
 
+Because the aim is for production farms, installation of Beta versions is incomplete.
+
 The DMGs are not accessible from Apple directly without logging into the developer center,
 you must place the DMGs on your own fileserver and list them in a data bag on your Chef server.
 ## Platform:
@@ -74,7 +76,7 @@ Install Xcode app.
 
 ### Attribute Parameters
 
-- version: Unique string to idenfity installed resource, appended to `install_dir`
+- id: Unique string to idenfity installed resource, appended to `install_dir`
 - url: Location of DMG to download
 - checksum: Checksum of DMG
 - app: Used by `dmg_package` Defaults to <code>"\"Xcode\""</code>.
@@ -85,6 +87,7 @@ Install Xcode app.
 ### Notes
 * `/Applications/Xcode.app` will still need to be addressed (ex: symlink an installed version)
 * `xcode-select -s <dir>` is run after each install so last verison will be default
+* Action of `:nothing` takes no action but useful to have data bag as placeholder
 
 ### Example
 For side-by-side installation, create a data bag item for each version.
@@ -162,7 +165,9 @@ end
 
 ## Notes
 
-When testing, ensure the VM has sufficient space for Xcode & simulators.
+### Testing
+
+When testing, ensure the VM has sufficient disk space for Xcode & simulators.
 
 ### Available Simulators
 
@@ -171,8 +176,10 @@ To see what simulators are available, below is an example Ruby script that can b
 require 'json'
 
 xcode_info = '/Applications/Xcode.app/Contents/Info.plist'
-xcode_version = `/usr/libexec/PlistBuddy -c "Print :DTXcode" #{xcode_info}`.chomp.to_i.to_s.split(//).join('.')
+xcode_version = `/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" #{xcode_info}`.chomp
 xcode_uuid = `/usr/libexec/PlistBuddy -c "Print :DVTPlugInCompatibilityUUID" #{xcode_info}`.chomp
+
+puts "Found version string '#{xcode_version}' with UUID '#{xcode_uuid}'"
 
 if Gem::Version.new(xcode_version) >= Gem::Version.new('8.1')
   index_url = "https://devimages-cdn.apple.com/downloads/xcode/simulators/index-#{xcode_version}-#{xcode_uuid}.dvtdownloadableindex"

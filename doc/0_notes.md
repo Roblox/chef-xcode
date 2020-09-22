@@ -12,8 +12,10 @@ To see what simulators are available, below is an example Ruby script that can b
 require 'json'
 
 xcode_info = '/Applications/Xcode.app/Contents/Info.plist'
-xcode_version = `/usr/libexec/PlistBuddy -c "Print :DTXcode" #{xcode_info}`.chomp.to_i.to_s.split(//).join('.')
+xcode_version = `/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" #{xcode_info}`.chomp
 xcode_uuid = `/usr/libexec/PlistBuddy -c "Print :DVTPlugInCompatibilityUUID" #{xcode_info}`.chomp
+
+puts "Found version string '#{xcode_version}' with UUID '#{xcode_uuid}'"
 
 if Gem::Version.new(xcode_version) >= Gem::Version.new('8.1')
   index_url = "https://devimages-cdn.apple.com/downloads/xcode/simulators/index-#{xcode_version}-#{xcode_uuid}.dvtdownloadableindex"

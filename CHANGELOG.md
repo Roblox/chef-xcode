@@ -1,5 +1,10 @@
 # Change Log
 
+## 2.3.0
+* Fix for determining next version (https://github.com/Roblox/chef-xcode/issues/2)
+* Newer versions of Xcode provides `-runFirstLaunch` method for installing dependent packages
+* Rename resource `version` to `id` as the version should be deciphered from the package
+
 ## 2.2.0
 * Detach fork from upstream
 * Clean up docs
