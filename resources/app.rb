@@ -58,8 +58,8 @@ resource_name :xcode_app
 provides :xcode_app
 
 # Properties
-#<> @property version Unique string to idenfity installed resource, appended to `install_dir`
-property :version, String, name_property: true
+#<> @property id Unique string to idenfity installed resource, appended to `install_dir`
+property :id, String, name_property: true
 #<> @property url Location of DMG to download
 property :url, String, required: true
 #<> @property checksum Checksum of DMG
@@ -110,7 +110,8 @@ action_class do
       only_if do
         if ::File.exist?('/Library/Preferences/com.apple.dt.Xcode.plist')
           curr_vers = shell_out("/usr/libexec/PlistBuddy -c 'Print :IDEXcodeVersionForAgreedToGMLicense' /Library/Preferences/com.apple.dt.Xcode.plist").stdout.chomp
-          next_vers = shell_out("/usr/libexec/PlistBuddy -c 'Print :DTXcode' #{install_dir}/Contents/Info.plist").stdout.chomp.to_i.to_s.split(//).join('.')
+          # For both GM and Beta, this will return 'Major.minor.patch' (where '.patch' is optional)
+          next_vers = shell_out("/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' #{install_dir}/Contents/Info.plist").stdout.chomp
           Gem::Version.new(next_vers) > Gem::Version.new(curr_vers)
         else
           true
@@ -146,14 +147,13 @@ action_class do
       raise 'Unsupported package provided Xcode installer must be provided as a DMG'
     end
 
-    post_install
     accept_eula
+    post_install
     delete_installer_file if lazy { ::Dir.exist?(install_dir) }
   end
 
   def install_dir
-    ::File.join(new_resource.install_root,
-                "Xcode#{new_resource.install_suffix ? "_#{new_resource.install_suffix}" : ''}.app")
+    ::File.join(new_resource.install_root, "Xcode#{new_resource.install_suffix ? "_#{new_resource.install_suffix}" : ''}.app")
   end
 
   def install_dmg
@@ -189,14 +189,21 @@ action_class do
   def post_install
     ruby_block 'Xcode post_install install packages' do
       block do
-        # Install any additional packages hiding in the Xcode installation path
-        xcode_packages =
-          ::Dir.entries("#{install_dir}/Contents/Resources/Packages/").select { |f| !::File.directory? f }
-        xcode_packages.each do |pkg|
-          execute "Installing Xcode package [#{pkg}]" do
-            command "sudo installer -pkg #{install_dir}/Contents/Resources/Packages/#{pkg} -target /"
+        version = shell_out("/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' #{install_dir}/Contents/Info.plist").stdout.chomp
+        # xcodebuild -runFirstLaunch introduced in Xcode 9
+        if Gem::Version.new(version) >= Gem::Version.new('9.0')
+          execute 'Run xcodebuild runFirstLaunch' do
+            command "sudo #{install_dir}/usr/bin/xcodebuild -runFirstLaunch"
           end
-        end unless xcode_packages.nil?
+        elsif Gem::Version.new(version) >= Gem::Version.new('8.0')
+          # Install any additional packages hiding in the Xcode installation path
+          xcode_packages = ::Dir.entries("#{install_dir}/Contents/Resources/Packages/").select { |f| !::File.directory? f }
+          xcode_packages.each do |pkg|
+            execute "Installing Xcode package [#{pkg}]" do
+              command "sudo installer -pkg #{install_dir}/Contents/Resources/Packages/#{pkg} -target /"
+            end
+          end unless xcode_packages.nil?
+        end
       end
       only_if { ::Dir.exist?(install_dir) }
     end
@@ -212,6 +219,6 @@ action_class do
   end
 
   def temp_pkg_dir
-    ::File.join(Chef::Config[:file_cache_path], "Xcode_#{new_resource.version}")
+    ::File.join(Chef::Config[:file_cache_path], "Xcode_#{new_resource.id}")
   end
 end
