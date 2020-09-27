@@ -1,5 +1,8 @@
 # Change Log
 
+## 2.3.1
+* Fix path to `xcodebuild` for runFirstLaunch
+
 ## 2.3.0
 * Fix for determining next version (https://github.com/Roblox/chef-xcode/issues/2)
 * Newer versions of Xcode provides `-runFirstLaunch` method for installing dependent packages
