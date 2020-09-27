@@ -193,7 +193,7 @@ action_class do
         # xcodebuild -runFirstLaunch introduced in Xcode 9
         if Gem::Version.new(version) >= Gem::Version.new('9.0')
           execute 'Run xcodebuild runFirstLaunch' do
-            command "sudo #{install_dir}/usr/bin/xcodebuild -runFirstLaunch"
+            command "sudo #{install_dir}/Contents/Developer/usr/bin/xcodebuild -runFirstLaunch"
           end
         elsif Gem::Version.new(version) >= Gem::Version.new('8.0')
           # Install any additional packages hiding in the Xcode installation path

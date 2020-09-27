@@ -4,7 +4,7 @@ maintainer_email 'info@roblox.com'
 license          'Apache-2.0'
 description      'Provides custom resource to install Apple Xcode app and simulators.'
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
-version          '2.3.0'
+version          '2.3.1'
 
 source_url 'https://github.com/Roblox/chef-xcode'
 issues_url 'https://github.com/Roblox/chef-xcode/issues'
