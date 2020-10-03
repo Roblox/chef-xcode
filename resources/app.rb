@@ -122,12 +122,17 @@ action_class do
 
   # Cleanup the installer file
   def delete_installer_file
-    file ::File.join(Chef::Config[:file_cache_path], ::File.basename(new_resource.url)) do
+    file installer_path do
       action :delete
+      backup false
       only_if do
-        ::File.exist?(::File.join(Chef::Config[:file_cache_path], ::File.basename(new_resource.url)))
+        ::File.exist?(installer_path)
       end
     end
+  end
+
+  def installer_path
+    ::File.join(Chef::Config[:file_cache_path], ::File.basename(new_resource.url))
   end
 
   def exist?
@@ -161,11 +166,18 @@ action_class do
       recursive true
     end
 
-    # @TODO: On APFS this doesn't seem to eject the disk
-    dmg_package new_resource.app do
+    remote_file new_resource.app do
+      backup false
       source new_resource.url
       checksum new_resource.checksum
-      dmg_name ::File.basename(new_resource.url, '.dmg')
+      path installer_path
+    end
+
+    # @TODO: On APFS this doesn't seem to eject the disk
+    dmg_package new_resource.app do
+      file installer_path
+      checksum new_resource.checksum
+      dmg_name ::File.basename(installer_path, '.dmg')
       owner 'root'
       type 'app'
       destination temp_pkg_dir

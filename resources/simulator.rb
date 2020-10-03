@@ -81,10 +81,7 @@ action :remove do
     action :delete
   end if exist?
 
-  file dmg_path do
-    action :delete
-    only_if { ::File.exist(dmg_path) }
-  end
+  delete_installer_file
 end
 
 #<> @action uninstall Deprecated
@@ -98,6 +95,7 @@ action_class do
   def cleanup
     file pkg_path do
       action :delete
+      backup false
       only_if { ::File.exist?(pkg_path) }
     end
 
@@ -105,6 +103,15 @@ action_class do
       recursive true
       action :delete
       only_if { ::Dir.exist?("#{pkg_path}.expand") }
+    end
+  end
+
+  # Cleanup the installer file
+  def delete_installer_file
+    file dmg_path do
+      action :delete
+      backup false
+      only_if { ::File.exist?(dmg_path) }
     end
   end
 
@@ -146,6 +153,7 @@ action_class do
       prepare_package
       install_package
       cleanup
+      delete_installer_file
     else
       raise 'Unsupported package provided Simulator installer must be provided as a DMG'
     end
@@ -157,6 +165,7 @@ action_class do
 
   def prepare_package
     remote_file dmg_path do
+      backup false
       source new_resource.url
       checksum new_resource.checksum
     end
