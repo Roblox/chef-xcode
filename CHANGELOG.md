@@ -1,5 +1,8 @@
 # Change Log
 
+## 2.4.0
+* To free up disk space, don't back up file and remove simulator installer file
+
 ## 2.3.1
 * Fix path to `xcodebuild` for runFirstLaunch
 
